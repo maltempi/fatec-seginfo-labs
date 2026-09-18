@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>E-commerce — Loja A</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:900px;margin:40px auto;padding:0 20px}
+.card{border:1px solid #ccc;border-radius:10px;padding:18px;margin:14px 0}
+button{padding:10px 14px;margin:5px 5px 5px 0;cursor:pointer}
+code,pre{background:#f4f4f4;padding:3px 6px;border-radius:4px}
+pre{padding:12px;white-space:pre-wrap}
+.note{color:#555}
+</style>
+</head>
+<body>
+<h1>E-commerce — Loja A</h1>
+<p>Domínio: <code>ecommerce.loja-a.test</code></p>
+
+<div class="card">
+  <h2>Cookies</h2>
+  <button data-acao="criou os cookies da Loja A" onclick="criarCookies()">Criar cookies</button>
+  <pre id="cookies"></pre>
+  <p class="note">
+    <b>Cookie first-party (host-only):</b> <code>produto=NOTEBOOK</code> pertence somente
+    a <code>ecommerce.loja-a.test</code>.<br>
+    <b>Cookie de domínio:</b> <code>cliente=ALUNO-17; Domain=loja-a.test</code>
+    também pode ser enviado ao <code>crm.loja-a.test</code>.
+  </p>
+</div>
+
+<div class="card">
+  <h2>Navegação</h2>
+  <button>Produtos</button>
+  <button>Carrinho</button>
+  <button>Comprar</button>
+  <button data-destino="crm">Abrir CRM em outra aba</button>
+  <button data-destino="parceiro">Abrir parceiro em outra aba</button>
+</div>
+<iframe id="analyticsFrame" src="http://analytics.terceiro.test:3002/" style="display:none" title="Analytics"></iframe>
+<script>
+const analytics = document.getElementById('analyticsFrame');
+const ANALYTICS_ORIGIN = 'http://analytics.terceiro.test:3002';
+
+function criarCookies(){
+  document.cookie = 'produto=NOTEBOOK; Path=/; SameSite=Lax';
+  document.cookie = 'cliente=CLIENTE-123; Domain=loja-a.test; Path=/; SameSite=Lax';
+  mostrarCookies();
+}
+
+function mostrarCookies(){
+  document.getElementById('cookies').textContent =
+    document.cookie || '(nenhum cookie visível)';
+}
+
+document.addEventListener('click', function(event){
+  const alvo = event.target.closest('button');
+  if (!alvo) return;
+
+  const destino = alvo.dataset.destino;
+  const acao = alvo.dataset.acao || (
+    alvo.textContent.trim()
+      ? 'clicou em "' + alvo.textContent.trim() + '"'
+      : 'clicou em botão'
+  );
+
+  analytics.contentWindow.postMessage({
+    tipo: 'tracking',
+    acao,
+    pagina: location.pathname,
+    titulo: document.title,
+    produto: alvo.dataset.produto || null,
+    quando: new Date().toISOString()
+  }, ANALYTICS_ORIGIN);
+
+  if (destino) {
+    const urls = {
+      crm: 'http://crm.loja-a.test:3001/',
+      parceiro: 'http://ecommerce.parceiro.test:3003/'
+    };
+    window.open(urls[destino], '_blank');
+  }
+});
+
+analytics.addEventListener('load', () => {
+  analytics.contentWindow.postMessage({
+    tipo: 'tracking',
+    acao: 'abriu o e-commerce',
+    pagina: location.pathname,
+    titulo: document.title,
+    quando: new Date().toISOString()
+  }, ANALYTICS_ORIGIN);
+});
+
+mostrarCookies();
+</script>
+</body>
+</html>

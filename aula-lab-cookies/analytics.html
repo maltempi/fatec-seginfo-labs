@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Analytics — Terceiro</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:1050px;margin:40px auto;padding:0 20px}
+.card{border:1px solid #ccc;border-radius:10px;padding:18px;margin:14px 0}
+code,pre{background:#f4f4f4;padding:3px 6px;border-radius:4px}
+pre{padding:14px;white-space:pre-wrap}
+.note{color:#555}
+</style>
+</head>
+<body>
+<h1>Analytics — Terceiro</h1>
+
+<div class="card">
+  <h2>Histórico de tracking</h2>
+  <pre id="historico">Nenhuma atividade registrada ainda.</pre>
+  <p class="note">
+    O histórico reúne eventos recebidos de diferentes sites pelo serviço de Analytics.
+    Durante a navegação, este documento fica dentro de um iframe oculto.
+  </p>
+</div>
+
+<div class="card">
+  <h2>Cookie de terceiro</h2>
+  <pre id="cookie"></pre>
+  <p class="note">
+    <code>analytics_id</code> pertence a <code>analytics.terceiro.test</code>.
+    Ele é um cookie do terceiro; o histórico abaixo é o resultado do tracking.
+  </p>
+</div>
+
+<script>
+document.cookie = 'analytics_id=ANALYTICS-12345;';
+
+const ORIGENS_PERMITIDAS = new Set([
+  'http://ecommerce.loja-a.test:3000',
+  'http://crm.loja-a.test:3001',
+  'http://ecommerce.parceiro.test:3003'
+]);
+
+window.addEventListener('message', async function(event){
+  if (!ORIGENS_PERMITIDAS.has(event.origin)) return;
+  if (!event.data || event.data.tipo !== 'tracking') return;
+
+  try {
+    await fetch('/track', {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({
+        site: event.origin,
+        acao: event.data.acao,
+        pagina: event.data.pagina,
+        titulo: event.data.titulo,
+        produto: event.data.produto || null,
+        quando: event.data.quando,
+        analytics_id: getAnalyticsId()
+      })
+    });
+    atualizar();
+  } catch {}
+});
+
+function getAnalyticsId(){
+  const item = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('analytics_id='));
+  return item ? item.split('=')[1] : null;
+}
+
+async function atualizar(){
+  try {
+    const r = await fetch('/events');
+    const eventos = await r.json();
+
+    document.getElementById('historico').textContent =
+      eventos.length
+        ? eventos.map((e,i) => {
+            const produto = e.produto ? ` | produto: ${e.produto}` : '';
+            return `${i+1}. [${new Date(e.quando).toLocaleString('pt-BR')}] ${e.site} — ${e.acao}${produto}`;
+          }).join('\\n')
+        : 'Nenhuma atividade registrada ainda.';
+  } catch {}
+
+  document.getElementById('cookie').textContent =
+    document.cookie || '(nenhum cookie visível)';
+}
+
+atualizar();
+setInterval(atualizar, 1000);
+</script>
+</body>
+</html>
