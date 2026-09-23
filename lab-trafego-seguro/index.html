@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login - Laboratório</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login {
+            background: white;
+            padding: 30px;
+            width: 300px;
+
+            border-radius: 10px;
+
+            box-shadow: 0 2px 12px #ccc;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+        }
+
+        input {
+            box-sizing: border-box;
+
+            width: 100%;
+            padding: 10px;
+
+            margin-top: 5px;
+
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+
+            padding: 10px;
+            margin-top: 20px;
+
+            border: 0;
+            border-radius: 5px;
+
+            background: #333;
+            color: white;
+
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #555;
+        }
+
+        .status {
+            display: none;
+
+            padding: 12px;
+            margin-bottom: 20px;
+
+            border-radius: 6px;
+
+            color: white;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .disclaimer {
+            margin-top: 20px;
+            padding-top: 15px;
+
+            border-top: 1px solid #ddd;
+
+            color: #666;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .disclaimer strong {
+            color: #b00020;
+        }
+    </style>
+</head>
+
+<body>
+
+    <form class="login" id="loginForm">
+
+        <h1>Login</h1>
+
+        <div class="status" id="status"></div>
+
+        <label>
+            Usuário
+
+            <input type="text" id="usuario" autocomplete="off" required>
+        </label>
+
+        <label>
+            Senha
+
+            <input type="password" id="senha" required>
+        </label>
+
+        <button type="submit">
+            Entrar
+        </button>
+
+        <div class="disclaimer">
+            Aplicação para demonstração na aula de
+            <strong>Segurança da Informação</strong>.<br>
+
+            <strong>Nunca insira seu usuário e senha reais aqui!</strong>
+        </div>
+
+    </form>
+
+    <script>
+        const form = document.getElementById("loginForm");
+        const status = document.getElementById("status");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const usuario = document.getElementById("usuario").value;
+            const senha = document.getElementById("senha").value;
+
+            const resposta = await fetch("/api/login", {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    usuario: usuario,
+                    senha: senha
+                })
+            });
+
+            const dados = await resposta.json();
+
+            status.textContent = dados.mensagem;
+            status.style.display = "block";
+
+            status.style.background =
+                dados.protocolo === "HTTPS"
+                    ? "#198754"
+                    : "#dc3545";
+        });
+    </script>
+
+</body>
+
+</html>
